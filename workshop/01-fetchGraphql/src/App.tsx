@@ -1,16 +1,39 @@
-import React from 'react';
-
+import React, { useEffect, useState, useCallback } from 'react';
 import { Flex, Text } from 'rebass';
 import { Card, Content, Button } from '@workshop/ui';
 
-const App = () => {
-  const posts = [];
-  const error = false;
+import { fetchGraphQL } from './fetchGraphQL';
 
-  /**
-   * @TODO
-   * Fetch posts to be rendered in this component
-   */
+const App = () => {
+  const [posts, setPosts] = useState([]);
+  const [error, setError] = useState(null);
+
+  const fetchQuery = useCallback(async () => {
+    setError(null);
+    try {
+      const result = await fetchGraphQL(
+        `query PostQuery {
+          posts(first: 10) {
+            edges {
+              node {
+                id
+                content
+              }
+            }
+          }
+        }`,
+        {},
+      );
+
+      setPosts(result.data.posts.edges.map(({ node }) => node));
+    } catch (err) {
+      setError(err.toString());
+    }
+  }, [setError, setPosts]);
+
+  useEffect(() => {
+    fetchQuery();
+  }, [fetchQuery]);
 
   if (error) {
     return (
